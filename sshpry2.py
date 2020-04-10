@@ -108,7 +108,7 @@ def PryonTTY(b):
    if not os.path.isfile(z.sessFile): open(z.sessFile,'w').close()
    with open(z.writefile,'a') as fo:
       fo.write('%s %s %s:\n\n' % (time.ctime(),z.tty,z.pid))
-   fdR,out = '',''
+   fdR,out = b'',''
    diff = 0.0
    while z.working:
       try:
@@ -116,12 +116,13 @@ def PryonTTY(b):
          output = sshpipe.stderr.readline()
          now = time.time()
          if z.lPlay: diff = now - z.lPlay
-         if 'read('+fdR in output:
+         breakpoint()
+         if b'read('+fdR in output:
             if z.debug: print(output)
             # Firstly, we need to find out target tty's stdout file descriptor, so we will send ' ' then backspace to the target tty and get the output
             # Need to find more elegant way to do it.
             if not fdR:  
-               fdL = re.findall('read\(([0-9]+), \".{1}\", 16384\) += 1',output)
+               fdL = re.findall('read\(([0-9]+), \".{1}\", 16384\) += 1',output.decode())
                if isinstance(fdL,list) and len(fdL):
                   fdR = fdL[0]
                   print('\n[+] Found %s <stdout> file descriptor!' % z.tty)
@@ -142,7 +143,7 @@ def PryonTTY(b):
                      else:
                         fsess.write(json.dumps(oDict)+"\n")
 
-         elif 'write(' in output:
+         elif b'write(' in output:
             '''
             In my testing, I was unable to implement both read and write calls.
             If I print out write calls also, every input typed inside the target tty will be doubled in ours,
@@ -151,7 +152,7 @@ def PryonTTY(b):
             Because of that, in current version, every write call will be redirected to file.
             Any ideas?
             '''
-            out = re.findall('write\([0-9]+, \"(.*)\", [0-9]+\) += 1$',output)
+            out = re.findall('write\([0-9]+, \"(.*)\", [0-9]+\) += 1$',output.decode())
             if isinstance(out,list) and len(out):
                pChar = str(out[0].decode('string_escape'))
                #sys.stdout.write(pChar)
